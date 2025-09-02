@@ -16,4 +16,5 @@ dependencies = [
     "datasets",
     "accelerate",
     "python-dotenv",
+    "huggingface_hub",
 ]

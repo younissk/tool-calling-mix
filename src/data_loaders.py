@@ -2,7 +2,7 @@
 
 import os
 import orjson
-from datasets import load_dataset, Dataset, concatenate_datasets
+from datasets import load_dataset, Dataset, concatenate_datasets, Features, Value
 from typing import Optional
 
 from src.config import (
@@ -169,6 +169,39 @@ def load_wikitext_nocall(cap: int = CAP_WIKITEXT_NO_CALL) -> Optional[Dataset]:
     return mapped  # type: ignore
 
 
+def ensure_hub_compatible_schema(dataset: Dataset) -> Dataset:
+    """
+    Ensure the dataset has a schema compatible with Hugging Face Hub.
+    This fixes the ArrowNotImplementedError that occurs when Hub tries to convert
+    Arrow files to Parquet for the dataset viewer.
+    """
+    # Remove any internal columns that start with underscore
+    bad_columns = [c for c in dataset.column_names if c.startswith("_")]
+    if bad_columns:
+        print(f"Removing internal columns: {bad_columns}")
+        dataset = dataset.remove_columns(bad_columns)
+    
+    # Define Parquet-friendly features
+    features = Features({
+        "tools_json": Value("string"),
+        "messages_json": Value("string"), 
+        "target_json": Value("string"),
+        "meta_source": Value("string"),
+        "n_calls": Value("int32"),  # Use int32 instead of int64 for Parquet compatibility
+        "difficulty": Value("string"),
+        "valid": Value("bool"),
+    })
+    
+    # Cast to ensure Parquet-friendly types
+    print("Ensuring Parquet-compatible schema...")
+    dataset = dataset.cast(features)
+    
+    # Clear any active formatting/transforms
+    dataset.reset_format()
+    
+    return dataset
+
+
 def create_mixed_dataset() -> Dataset:
     """Create the final mixed dataset by combining all available datasets."""
     from src.config import OPENFUNCTIONS_FILES
@@ -200,4 +233,8 @@ def create_mixed_dataset() -> Dataset:
 
     mix = concatenate_datasets(parts).shuffle(seed=RANDOM_SEED)
     print("TOTAL adapted:", len(mix))
+    
+    # Ensure Hub-compatible schema
+    mix = ensure_hub_compatible_schema(mix)
+    
     return mix

@@ -1,4 +1,4 @@
-.PHONY: help run install dev clean check test format lint
+.PHONY: help run install dev clean upload
 
 help:
 	@echo "Available targets:"
@@ -27,3 +27,8 @@ clean:
 	rm -rf .ruff_cache/
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+upload:
+	hf auth whoami
+	hf upload younissk/tool-calling-sft-mix README.md --repo-type=dataset 
+	hf upload younissk/tool-calling-sft-mix output/tool_sft_corpus --repo-type=dataset
