@@ -1,0 +1,16 @@
+
+
+.env
+.venv
+
+output/
+data/gorilla_openfunctions_v1_train.json
+data/gorilla_openfunctions_v1_test.json
+
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+.env
+.venv

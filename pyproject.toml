@@ -1,0 +1,19 @@
+[project]
+name = "tool-calling-sft-mix"
+version = "0.1.0"
+description = "Dataset for Tool Calling"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "datasets",
+    "orjson",
+    "jsonschema",
+    "tqdm",
+    "jsonschema",
+    "fastjsonschema",
+    "python-dateutil",
+    "markdown",
+    "datasets",
+    "accelerate",
+    "python-dotenv",
+]

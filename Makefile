@@ -1,0 +1,29 @@
+.PHONY: help run install dev clean check test format lint
+
+help:
+	@echo "Available targets:"
+	@echo "  run      - Run the main script using uv"
+	@echo "  install  - Install dependencies using uv sync"
+	@echo "  dev      - Install dependencies and run in development mode"
+	@echo "  clean    - Clean up cache and temporary files"
+
+# Run the main script
+run:
+	uv run python -m src.main
+
+# Install dependencies
+install:
+	uv sync
+
+# Development setup: install deps and run
+dev: install run
+
+# Clean up cache and temporary files
+clean:
+	rm -rf __pycache__/
+	rm -rf src/__pycache__/
+	rm -rf .pytest_cache/
+	rm -rf .mypy_cache/
+	rm -rf .ruff_cache/
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
