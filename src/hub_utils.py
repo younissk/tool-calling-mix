@@ -42,7 +42,7 @@ def save_dataset_with_backup(
     create_jsonl: bool = True
 ) -> None:
     """
-    Save dataset to disk with optional JSONL backup.
+    Save dataset to disk with JSONL files only (no Arrow format).
 
     Args:
         dataset: The dataset or DatasetDict to save
@@ -52,14 +52,12 @@ def save_dataset_with_backup(
     print(f"Saving dataset to: {output_path}")
     
     if isinstance(dataset, DatasetDict):
-        # Save each split
+        # Save each split as JSONL only
         for split_name, split_dataset in dataset.items():
             if create_jsonl:
                 create_jsonl_backup(split_dataset, output_path, split_name)
-        dataset.save_to_disk(output_path)
     else:
         # Single dataset case
-        dataset.save_to_disk(output_path)
         if create_jsonl:
             create_jsonl_backup(dataset, output_path, "train")
             
