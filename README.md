@@ -96,32 +96,12 @@ This dataset is designed for:
 - Fine-tuning existing models for tool usage
 - Studying tool calling patterns and behaviors
 
-### Out-of-scope Use
-
-This dataset should NOT be used for:
-
-- Training models to generate harmful tool calls
-- Creating models that bypass tool safety checks
-- Training general language models without tool focus
-
 ### Known Limitations & Ethical Risks
 
 1. Limited diversity in tool types and domains
 2. Potential biases from source datasets
 3. May not cover all edge cases in tool usage
 4. Could enable misuse if not properly constrained
-
-### Maintenance & Contact
-
-- Maintained by: @younissk
-- Updates: Monthly reviews for quality/issues
-- Contact: Issues via GitHub repository
-
-### Versioning
-
-- Current version: v1.0.0
-- All sampling/shuffling uses seed=42
-- Changes tracked in CHANGES.md
 
 ## Usage
 

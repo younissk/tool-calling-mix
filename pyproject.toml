@@ -21,4 +21,7 @@ dependencies = [
     "kaleido",
     "pandas",
     "numpy",
+    "matplotlib",
+    "seaborn",
+    "pandas",
 ]

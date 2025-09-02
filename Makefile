@@ -39,5 +39,4 @@ upload:
 
 # Generate data visualizations
 visualize:
-	uv pip install matplotlib seaborn pandas
 	uv run python -m src.visualize
