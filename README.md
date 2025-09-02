@@ -16,6 +16,16 @@ task_categories:
 language:
 - en
 pretty_name: Tool Calling SFT Mix
+configs:
+- config_name: default
+  default: true
+  data_files:
+  - split: train
+    path: "raw/train.jsonl.gz"
+  - split: validation
+    path: "raw/dev.jsonl.gz"
+  - split: test
+    path: "raw/test.jsonl.gz"
 dataset_info:
   features:
   - name: tools_json
@@ -34,6 +44,12 @@ dataset_info:
     dtype: bool
   splits:
   - name: train
+    num_bytes: null
+    num_examples: null
+  - name: validation
+    num_bytes: null
+    num_examples: null
+  - name: test
     num_bytes: null
     num_examples: null
   download_size: null
@@ -115,8 +131,18 @@ This dataset should NOT be used for:
 from datasets import load_dataset
 import json
 
-# Load the dataset
-ds = load_dataset("younissk/tool-calling-sft-mix")
+# Load the dataset (primary method)
+ds = load_dataset("younissk/tool-calling-mix")
+
+# Alternative method if the above fails (explicit file specification)
+# ds = load_dataset(
+#     "json",
+#     data_files={
+#         "train": "hf://datasets/younissk/tool-calling-mix/raw/train.jsonl.gz",
+#         "validation": "hf://datasets/younissk/tool-calling-mix/raw/dev.jsonl.gz", 
+#         "test": "hf://datasets/younissk/tool-calling-mix/raw/test.jsonl.gz",
+#     }
+# )
 
 # Helper function to validate JSON fields
 def validate_example(example):

@@ -30,10 +30,12 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
 upload:
+	make dev
+	make visualize
 	hf auth whoami
-	hf upload younissk/tool-calling-sft-mix README.md --repo-type=dataset
-	hf upload younissk/tool-calling-sft-mix images --repo-type=dataset
-	hf upload younissk/tool-calling-sft-mix output/tool_sft_corpus --repo-type=dataset
+	hf upload younissk/tool-calling-mix README.md --repo-type=dataset
+	hf upload younissk/tool-calling-mix images --repo-type=dataset
+	hf upload younissk/tool-calling-mix output/tool_sft_corpus --repo-type=dataset
 
 # Generate data visualizations
 visualize:
