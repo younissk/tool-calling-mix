@@ -1,0 +1,16 @@
+{
+  "total_examples": 39538,
+  "valid_examples": 39538,
+  "avg_tool_calls": 1.1377914917294754,
+  "max_tool_calls": 24,
+  "difficulty_distribution": {
+    "simple": 39399,
+    "multiple": 139
+  },
+  "source_distribution": {
+    "xlam60k": 20000,
+    "openfunctions_v1": 11538,
+    "instr_nocall_dolly": 5000,
+    "wikitext_nocall": 3000
+  }
+}

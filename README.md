@@ -48,24 +48,108 @@ This is a dataset for fine-tuning a language model to use tools. I combined sour
 
 ```bash
 # Create the mixed dataset with Hub-compatible schema
-uv run python -m src.main
+make run
 
-# Or specify custom output path
-uv run python -m src.main --output-path output/my_dataset
+# Install dependencies first (if needed)
+make install
+
+# Development setup: install deps and run
+make dev
 ```
 
 ### Upload to Hugging Face Hub
 
 ```bash
-# Create dataset and upload to Hub
-uv run python -m src.main --repo-id YOUR_USERNAME/tool-calling-sft-mix-v1
-
-# Upload existing dataset only
-uv run python -m src.main --upload-only --repo-id YOUR_USERNAME/tool-calling-sft-mix-v1
-
-# Make dataset private
-uv run python -m src.main --repo-id YOUR_USERNAME/tool-calling-sft-mix-v1 --private
+# Upload dataset to Hugging Face Hub
+make upload
 ```
+
+### Available Make Commands
+
+```bash
+# Show all available targets
+make help
+
+# Run the main script using uv
+make run
+
+# Install dependencies using uv sync
+make install
+
+# Development setup: install deps and run
+make dev
+
+# Clean up cache and temporary files
+make clean
+
+# Upload dataset to Hugging Face Hub
+make upload
+
+# Generate data visualizations
+make visualize
+```
+
+## Dataset Analysis
+
+The dataset has been analyzed to understand its composition, characteristics, and patterns. You can generate these visualizations yourself using:
+
+```bash
+make visualize
+```
+
+The visualizations are generated using matplotlib and seaborn, providing high-quality static images perfect for documentation and analysis.
+
+### Dataset Composition
+
+![Dataset Composition](images/dataset_composition.png)
+
+The pie charts above show the distribution of examples across different data sources and difficulty levels. Key insights:
+
+- **xLAM dataset dominates** with 50.6% of examples (20,000 samples)
+- **OpenFunctions contributes** 29.2% (11,538 samples)
+- **No-call examples** from Dolly and WikiText make up 20.2% (8,000 samples)
+- **99.6% are simple difficulty** examples, with only 0.4% being multiple tool calls
+
+### Tool Call Analysis
+
+![Tool Call Analysis](images/tool_call_analysis.png)
+
+This comprehensive analysis reveals:
+
+- **Most examples use 1 tool call** (average 1.14, max 24)
+- **Source-specific patterns**: xLAM and OpenFunctions show different tool call distributions
+- **Difficulty correlation**: Multiple difficulty examples tend to have more tool calls
+- **Tool efficiency**: Most examples use fewer tools than available
+
+### Message Analysis
+
+![Message Analysis](images/message_analysis.png)
+
+Message characteristics analysis shows:
+
+- **Message length distribution** is right-skewed with most messages being concise
+- **Weak correlation** between message length and number of tool calls
+- **Source differences**: xLAM messages tend to be longer than OpenFunctions
+- **Difficulty patterns**: Multiple difficulty examples have more varied message lengths
+
+### Tool Usage Patterns
+
+![Tool Usage Patterns](images/tool_usage_patterns.png)
+
+The horizontal bar chart shows the **top 20 most frequently used tools** in the dataset. This helps identify:
+
+- **Most common APIs** and functions
+- **Tool popularity distribution**
+- **Potential training focus areas** for specific tool types
+
+## Dataset Statistics
+
+- **Total Examples**: 39,538
+- **Valid Examples**: 39,538 (100% valid)
+- **Average Tool Calls**: 1.14 per example
+- **Maximum Tool Calls**: 24 in a single example
+- **Source Balance**: Well-distributed across 4 major sources
+- **Difficulty Distribution**: 99.6% simple, 0.4% multiple tool calls
 
 ### Features
 

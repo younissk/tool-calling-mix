@@ -17,4 +17,8 @@ dependencies = [
     "accelerate",
     "python-dotenv",
     "huggingface_hub",
+    "plotly",
+    "kaleido",
+    "pandas",
+    "numpy",
 ]

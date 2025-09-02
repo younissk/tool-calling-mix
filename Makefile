@@ -1,11 +1,12 @@
-.PHONY: help run install dev clean upload
+.PHONY: help run install dev clean upload visualize
 
 help:
 	@echo "Available targets:"
-	@echo "  run      - Run the main script using uv"
-	@echo "  install  - Install dependencies using uv sync"
-	@echo "  dev      - Install dependencies and run in development mode"
-	@echo "  clean    - Clean up cache and temporary files"
+	@echo "  run        - Run the main script using uv"
+	@echo "  install    - Install dependencies using uv sync"
+	@echo "  dev        - Install dependencies and run in development mode"
+	@echo "  clean      - Clean up cache and temporary files"
+	@echo "  visualize  - Generate data visualizations"
 
 # Run the main script
 run:
@@ -30,5 +31,11 @@ clean:
 
 upload:
 	hf auth whoami
-	hf upload younissk/tool-calling-sft-mix README.md --repo-type=dataset 
+	hf upload younissk/tool-calling-sft-mix README.md --repo-type=dataset
+	hf upload younissk/tool-calling-sft-mix images --repo-type=dataset
 	hf upload younissk/tool-calling-sft-mix output/tool_sft_corpus --repo-type=dataset
+
+# Generate data visualizations
+visualize:
+	uv pip install matplotlib seaborn pandas
+	uv run python -m src.visualize
