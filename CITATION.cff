@@ -1,0 +1,110 @@
+cff-version: 1.2.0
+message: "If you use this dataset, please cite it as below."
+type: dataset
+title: "Tool Calling Mix"
+version: 1.0.0
+date-released: "2025-09-02"
+url: "https://huggingface.co/datasets/younissk/tool-calling-mix"
+repository-code: "https://github.com/younissk/tool-calling-mix"
+license: NOASSERTION
+license-comment: >
+  Mixed upstream licenses. Code and scripts in this repository are Apache-2.0.
+  The dataset content includes items derived from sources under CC-BY-SA and other terms.
+  See the dataset card and meta/sources.md for per-source licenses.
+
+abstract: >-
+  A curated, unified corpus for supervised fine-tuning (SFT) of language models on
+  tool/function calling. It consolidates examples from xLAM Function-Calling,
+  Gorilla OpenFunctions-related material, and ToolBench-like data, and mixes in
+  “no-call” examples (Dolly-15k, WikiText-103 excerpts) to reduce catastrophic
+  forgetting. Each row uses a simple schema with JSON-serialized fields:
+  tools_json, messages_json, target_json; and metadata (meta_source, n_calls,
+  difficulty, valid).
+
+keywords:
+  - dataset
+  - tool-calling
+  - function-calling
+  - supervised-fine-tuning
+  - language-models
+
+authors:
+  - family-names: "Kandah"
+    given-names: "Youniss"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # add if you have one
+
+preferred-citation:
+  type: dataset
+  title: "Tool Calling SFT Mix"
+  authors:
+    - family-names: "Kandah"
+      given-names: "Youniss"
+  year: 2024
+  version: "1.0.0"
+  url: "https://huggingface.co/datasets/younissk/tool-calling-sft-mix"
+
+references:
+  - type: article
+    title: "xLAM: A Family of Large Action Models to Empower AI Agents"
+    authors:
+      - family-names: "Zhang"
+        given-names: "J."
+      # (et al. abbreviated)
+    year: 2024
+    url: "https://arxiv.org/abs/2409.03215"
+
+  - type: article
+    title: "Gorilla: Large Language Model Connected with Massive APIs"
+    authors:
+      - family-names: "Patil"
+        given-names: "S. G."
+      # (et al. abbreviated)
+    year: 2024
+    conference:
+      name: "NeurIPS 2024"
+    url: "https://gorilla.cs.berkeley.edu"  # project site is fine for CFF
+
+  - type: article
+    title: "ToolLLM: Facilitating Large Language Models to Master 16,000+ Real-world APIs"
+    authors:
+      - family-names: "Qin"
+        given-names: "Y."
+      # (et al. abbreviated)
+    year: 2023
+    url: "https://arxiv.org/abs/2307.16789"
+
+  - type: software
+    title: "OpenBMB/ToolBench"
+    authors:
+      - name: "OpenBMB"
+    year: 2023
+    url: "https://github.com/OpenBMB/ToolBench"
+
+  - type: dataset
+    title: "databricks-dolly-15k"
+    authors:
+      - name: "Databricks"
+    year: 2023
+    url: "https://huggingface.co/datasets/databricks/databricks-dolly-15k"
+
+  - type: article
+    title: "Pointer Sentinel Mixture Models"
+    authors:
+      - family-names: "Merity"
+        given-names: "S."
+      - family-names: "Xiong"
+        given-names: "C."
+      - family-names: "Bradbury"
+        given-names: "J."
+      - family-names: "Socher"
+        given-names: "R."
+    year: 2016
+    url: "https://arxiv.org/abs/1609.07843"
+
+  - type: dataset
+    title: "WikiText-103 (raw v1)"
+    authors:
+      - family-names: "Salesforce Research"
+        given-names: "—"
+    year: 2016
+    url: "https://huggingface.co/datasets/wikitext"

@@ -1,6 +1,6 @@
 ---
 title: Tool Calling SFT Mix
-license: apache-2.0
+license: mit
 tags:
 - tool-calling
 - function-calling
@@ -9,7 +9,7 @@ tags:
 - language-model
 - artificial-intelligence
 size_categories:
-- 1K<n<10K
+- 10K<n<100K
 task_categories:
 - text-generation
 - other
@@ -41,6 +41,154 @@ dataset_info:
 ---
 
 This is a dataset for fine-tuning a language model to use tools. I combined sources from various other tool calling datasets and added some non-tool calling examples to prevent catastrophic forgetting.
+
+## Dataset Overview
+
+### Motivation
+
+This dataset was created to address the need for a diverse, high-quality dataset for training language models in tool usage. By combining multiple sources and including non-tool examples, it aims to produce models that can effectively use tools while maintaining general language capabilities.
+
+### Composition
+
+The dataset combines examples from several high-quality sources:
+
+| Source | Count | Cap | License | URL/Commit |
+|--------|-------|-----|----------|------------|
+| xLAM | 20,000 | 20k | Apache-2.0 | [xlam-function-calling-60k](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k) |
+| OpenFunctions | 11,538 | 12k | Apache-2.0 | [Gorilla OpenFunctions v1](https://huggingface.co/datasets/gorilla-llm/openfunction-v1) |
+| Dolly-15k | 4,000 | 4k | CC BY-SA 3.0 | [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k) |
+| WikiText-103 | 4,000 | 4k | CC BY-SA 3.0 | [wikitext-103-raw-v1](https://huggingface.co/datasets/wikitext) |
+
+Key statistics:
+
+- No-call examples: 20.2%
+- Difficulty distribution: 99.6% simple / 0.4% multiple
+- Total examples: 39,538
+
+### Pre-processing
+
+1. All examples are converted to a unified schema
+2. JSON fields are validated and normalized
+3. Tool calls are extracted and standardized
+4. Random seed 42 is used for all shuffling/sampling
+
+### Intended Use
+
+This dataset is designed for:
+
+- Training language models to use tools effectively
+- Fine-tuning existing models for tool usage
+- Studying tool calling patterns and behaviors
+
+### Out-of-scope Use
+
+This dataset should NOT be used for:
+
+- Training models to generate harmful tool calls
+- Creating models that bypass tool safety checks
+- Training general language models without tool focus
+
+### Known Limitations & Ethical Risks
+
+1. Limited diversity in tool types and domains
+2. Potential biases from source datasets
+3. May not cover all edge cases in tool usage
+4. Could enable misuse if not properly constrained
+
+### Maintenance & Contact
+
+- Maintained by: @younissk
+- Updates: Monthly reviews for quality/issues
+- Contact: Issues via GitHub repository
+
+### Versioning
+
+- Current version: v1.0.0
+- All sampling/shuffling uses seed=42
+- Changes tracked in CHANGES.md
+
+## Usage
+
+### Load and Validate Dataset
+
+```python
+from datasets import load_dataset
+import json
+
+# Load the dataset
+ds = load_dataset("younissk/tool-calling-sft-mix")
+
+# Helper function to validate JSON fields
+def validate_example(example):
+    # Parse JSON fields
+    tools = json.loads(example["tools_json"])
+    messages = json.loads(example["messages_json"])
+    target = json.loads(example["target_json"])
+    
+    # Basic validation
+    assert isinstance(tools, list), "tools_json must be a list"
+    assert isinstance(messages, list), "messages_json must be a list"
+    assert "tool_calls" in target, "target_json must have tool_calls"
+    assert isinstance(target["tool_calls"], list), "tool_calls must be a list"
+    
+    # Validate message format
+    for msg in messages:
+        assert "role" in msg and "content" in msg, "Invalid message format"
+        assert msg["role"] in ["user", "assistant"], "Invalid role"
+        assert isinstance(msg["content"], str), "Content must be string"
+    
+    return True
+
+# Validate a few examples
+for split in ds.keys():
+    print(f"\nValidating {split} split...")
+    for i, example in enumerate(ds[split].select(range(min(5, len(ds[split])))), 1):
+        try:
+            validate_example(example)
+            print(f"✓ Example {i} valid")
+        except Exception as e:
+            print(f"✗ Example {i} invalid: {str(e)}")
+```
+
+### Training Example
+
+```python
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from datasets import load_dataset
+import json
+
+# Load model and tokenizer
+model_name = "your-base-model"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# Load and prepare dataset
+ds = load_dataset("younissk/tool-calling-mix")
+
+def prepare_example(example):
+    # Parse JSON fields
+    tools = json.loads(example["tools_json"])
+    messages = json.loads(example["messages_json"])
+    target = json.loads(example["target_json"])
+    
+    # Format conversation
+    conversation = []
+    for msg in messages:
+        conversation.append(f"{msg['role']}: {msg['content']}")
+    
+    # Add tool calls if any
+    if target["tool_calls"]:
+        tool_calls = json.dumps(target["tool_calls"], indent=2)
+        conversation.append(f"assistant: Let me help with that.\n{tool_calls}")
+    
+    # Join with newlines
+    return {"text": "\n".join(conversation)}
+
+# Prepare training data
+train_data = ds["train"].map(prepare_example)
+
+# Your training loop here...
+```
 
 ## Quick Start
 
