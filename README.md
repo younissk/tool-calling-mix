@@ -23,7 +23,7 @@ configs:
   - split: train
     path: "raw/train.jsonl.gz"
   - split: validation
-    path: "raw/dev.jsonl.gz"
+    path: "raw/validation.jsonl.gz"
   - split: test
     path: "raw/test.jsonl.gz"
 dataset_info:

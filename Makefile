@@ -1,4 +1,4 @@
-.PHONY: help run install dev clean upload visualize
+.PHONY: help run install dev clean upload visualize all git
 
 help:
 	@echo "Available targets:"
@@ -30,8 +30,6 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 
 upload:
-	make dev
-	make visualize
 	hf auth whoami
 	hf upload younissk/tool-calling-mix README.md --repo-type=dataset
 	hf upload younissk/tool-calling-mix images --repo-type=dataset
@@ -40,3 +38,13 @@ upload:
 # Generate data visualizations
 visualize:
 	uv run python -m src.visualize
+
+all:
+	make dev
+	make visualize
+	make upload
+
+git:
+	git add .
+	git commit -m "Update dataset"
+	git push
