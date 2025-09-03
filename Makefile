@@ -1,23 +1,42 @@
-.PHONY: help run install dev clean upload visualize all git
+.PHONY: help run run-enhanced install dev clean upload visualize validate test-quality all git
 
 help:
 	@echo "Available targets:"
-	@echo "  run        - Run the main script using uv"
-	@echo "  install    - Install dependencies using uv sync"
-	@echo "  dev        - Install dependencies and run in development mode"
-	@echo "  clean      - Clean up cache and temporary files"
-	@echo "  visualize  - Generate data visualizations"
+	@echo "  run           - Run the main script using uv"
+	@echo "  run-enhanced  - Run enhanced script with quality controls"
+	@echo "  install       - Install dependencies using uv sync"
+	@echo "  dev           - Install dependencies and run enhanced mode"
+	@echo "  clean         - Clean up cache and temporary files"
+	@echo "  visualize     - Generate data visualizations"
+	@echo "  validate      - Run quality validation on existing dataset"
+	@echo "  test-quality  - Run unit tests for quality control"
 
-# Run the main script
+# Run the main script (standard)
 run:
 	uv run python -m src.main
+
+# Run enhanced script with quality controls
+run-enhanced:
+	uv run python -m src.enhanced_main --validate
+
+# Run enhanced script in strict mode
+run-strict:
+	uv run python -m src.enhanced_main --validate --strict
 
 # Install dependencies
 install:
 	uv sync
 
-# Development setup: install deps and run
-dev: install run
+# Development setup: install deps and run enhanced mode
+dev: install run-enhanced
+
+# Run quality validation on existing dataset
+validate:
+	uv run python -m src.validate_quality
+
+# Run unit tests for quality control
+test-quality:
+	uv run python -m src.unit_tests
 
 # Clean up cache and temporary files
 clean:
