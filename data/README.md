@@ -1,3 +1,5 @@
 # Instructions
 
 Download the gorilla_openfunctions_v1_train.json and gorilla_openfunctions_v1_test.json files from the Gorilla OpenFunctions v1 dataset and then place them in the data folder.
+
+You will also need to download ToolBench and place the toolllama_G123_dfs_train.json and toolllama_G123_dfs_eval.json files in the data/ToolBench folder.

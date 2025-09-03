@@ -14,7 +14,7 @@ def safe_eval_pythonish(s: Any) -> Optional[Any]:
         return s
     if not isinstance(s, str):
         return None
-    
+
     try:
         return ast.literal_eval(s)
     except Exception:
@@ -38,7 +38,7 @@ def to_param_schema(parameters: Any) -> Any:
     if isinstance(parameters, dict):
         # assume already object-ish
         return {"type": "object", "properties": parameters}
-    
+
     if isinstance(parameters, list):
         props = {}
         for p in parameters:
@@ -48,7 +48,7 @@ def to_param_schema(parameters: Any) -> Any:
                 props[nm] = pd
         if props:
             return {"type": "object", "properties": props}
-    
+
     return parameters
 
 
@@ -61,18 +61,19 @@ def parse_call_string(s: str) -> tuple[Optional[str], Dict[str, Any]]:
     """
     if not isinstance(s, str):
         return None, {}
-    
+
     m = _CALL_RE.match(s.strip())
     if not m:
         return None, {}
-    
+
     func = m.group(1)
     args_str = m.group(2).strip()
-    
+
     # make JSON-ish
     jsonish = re.sub(r'(\w+)\s*=', r'"\1":', args_str)
-    jsonish = jsonish.replace("None", "null").replace("True", "true").replace("False", "false")
-    
+    jsonish = jsonish.replace("None", "null").replace(
+        "True", "true").replace("False", "false")
+
     try:
         args = orjson.loads(("{" + jsonish + "}").encode('utf-8'))
     except Exception:
@@ -82,7 +83,7 @@ def parse_call_string(s: str) -> tuple[Optional[str], Dict[str, Any]]:
             args = tmp if isinstance(tmp, dict) else {"_raw": args_str}
         except Exception:
             args = {"_raw": args_str}
-    
+
     return func, args
 
 
@@ -102,7 +103,7 @@ def adapt_xlam60k(row: Dict[str, Any]) -> Dict[str, Any]:
                 f = m["function_call"]
                 tc = [{"name": f.get("name"), "arguments": f.get("arguments")}]
                 break
-    
+
     if tc is None:
         if "tool_calls" in row:
             tc = row["tool_calls"]
@@ -141,7 +142,8 @@ def adapt_openfunctions_row(row: Dict[str, Any]) -> Dict[str, Any]:
         for f in row["Functions"]:
             parsed = safe_eval_pythonish(f)
             if isinstance(parsed, dict):
-                name = parsed.get("api_name") or parsed.get("api_call") or parsed.get("name") or "function_call"
+                name = parsed.get("api_name") or parsed.get(
+                    "api_call") or parsed.get("name") or "function_call"
                 tool_specs.append({
                     "name": name,
                     "description": parsed.get("description", ""),
@@ -178,7 +180,8 @@ def adapt_openfunctions_row(row: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(row.get("question"), str) and isinstance(row.get("function"), dict) and "model_answer" in row:
         user_text = row["question"]
         fn = row["function"] or {}
-        tool_name = fn.get("api_call") or fn.get("api_name") or fn.get("name") or "function_call"
+        tool_name = fn.get("api_call") or fn.get(
+            "api_name") or fn.get("name") or "function_call"
         tools = [{
             "name": tool_name,
             "description": fn.get("description", ""),
@@ -200,11 +203,14 @@ def adapt_openfunctions_row(row: Dict[str, Any]) -> Dict[str, Any]:
         return out
 
     # Handle generic format
-    tools = row.get("functions") or row.get("tools") or row.get("tool_desc") or []
-    user_text = row.get("instruction") or row.get("user") or row.get("prompt") or row.get("question")
+    tools = row.get("functions") or row.get(
+        "tools") or row.get("tool_desc") or []
+    user_text = row.get("instruction") or row.get(
+        "user") or row.get("prompt") or row.get("question")
     if user_text:
         messages = [{"role": "user", "content": str(user_text)}]
-        raw = row.get("output") or row.get("response") or row.get("assistant") or row.get("tool_calls")
+        raw = row.get("output") or row.get("response") or row.get(
+            "assistant") or row.get("tool_calls")
         tool_calls = None
         if isinstance(raw, list):
             tool_calls = raw
@@ -231,4 +237,160 @@ def adapt_openfunctions_row(row: Dict[str, Any]) -> Dict[str, Any]:
                 out["valid"] = True
                 return out
 
+    return out
+
+
+def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Adapt ToolBench dataset rows to standard format."""
+    out = make_empty_row()
+
+    # Extract the conversation from the new ToolBench format
+    conversations = row.get("conversations", [])
+    if not conversations or not isinstance(conversations, list):
+        return out
+
+    # Parse messages and extract tools and function calls
+    messages = []
+    tools = []
+    tool_calls = []
+    current_call = None
+
+    for msg in conversations:
+        if not isinstance(msg, dict):
+            continue
+
+        from_role = msg.get("from", "")
+        content = msg.get("value", "")
+
+        # Map ToolBench roles to standard roles
+        if from_role == "system":
+            # Extract tool definitions from system message
+            if "you have access to the following APIs:" in content.lower() or "specifically, you have access to the following apis:" in content.lower():
+                # Try to extract tool definitions from the system prompt
+                import re
+                
+                # Look for the API list in the content
+                start_marker = "Specifically, you have access to the following APIs:"
+                if start_marker in content:
+                    api_section = content[content.find(start_marker) + len(start_marker):]
+                    
+                    # Extract individual API definitions
+                    api_matches = re.findall(r"\{'name':\s*'([^']+)'[^}]*?'description':\s*'([^']*?)'[^}]*?'parameters':\s*(\{.*?\})\s*\}", api_section, re.DOTALL)
+                    
+                    for match in api_matches:
+                        name, desc, params_str = match
+                        try:
+                            # Clean up the parameters string and parse
+                            params_clean = params_str.replace("'", '"').replace('\\"', '"')
+                            params = orjson.loads(params_clean.encode('utf-8'))
+                            tools.append({
+                                "name": name,
+                                "description": desc,
+                                "parameters": to_param_schema(params)
+                            })
+                        except Exception:
+                            # Fallback: create basic parameter schema
+                            tools.append({
+                                "name": name,
+                                "description": desc,
+                                "parameters": {"type": "object", "properties": {}}
+                            })
+            continue
+
+        elif from_role == "user":
+            role = "user"
+        elif from_role == "assistant":
+            role = "assistant"
+            # Parse function calls from assistant messages
+            if "Action:" in content and "Action Input:" in content:
+                lines = content.split('\n')
+                action_name = None
+                action_input = None
+                
+                for i, line in enumerate(lines):
+                    if line.strip().startswith("Action:"):
+                        action_name = line.replace("Action:", "").strip()
+                    elif line.strip().startswith("Action Input:"):
+                        # Get the JSON from the following lines
+                        json_lines = []
+                        for j in range(i + 1, len(lines)):
+                            current_line = lines[j].strip()
+                            if not current_line:
+                                continue
+                            # Stop if we hit the next section
+                            if current_line.startswith("Thought:") or current_line.startswith("Action:"):
+                                break
+                            json_lines.append(lines[j])
+                        
+                        if json_lines:
+                            try:
+                                json_str = '\n'.join(json_lines).strip()
+                                # Fix JSON format - add opening brace if missing
+                                if not json_str.startswith('{'):
+                                    json_str = '{' + json_str
+                                action_input = orjson.loads(json_str.encode('utf-8'))
+                            except Exception:
+                                try:
+                                    # Try ast.literal_eval for Python-like syntax
+                                    action_input = safe_eval_pythonish(json_str)
+                                except Exception:
+                                    # Last resort: try to extract key-value pairs manually
+                                    if '{' in json_str and '}' in json_str:
+                                        import re
+                                        # Extract key: value pairs
+                                        pairs = re.findall(r'"([^"]+)":\s*"([^"]*)"', json_str)
+                                        if pairs:
+                                            action_input = dict(pairs)
+                                        else:
+                                            action_input = {}
+                                    else:
+                                        action_input = {}
+                
+                if action_name and action_input is not None and action_name != "Finish":
+                    tool_calls.append({
+                        "name": action_name,
+                        "arguments": action_input if isinstance(action_input, dict) else {}
+                    })
+
+        elif from_role == "function":
+            role = "tool"
+        else:
+            continue
+
+        # Add the message
+        if role and content:
+            messages.append({"role": role, "content": content})
+
+    # Skip if no tool calls found
+    if not tool_calls:
+        return out
+
+    # Skip if no user message found
+    if not any(msg.get("role") == "user" for msg in messages):
+        return out
+
+    # If no tools were extracted from system message, create basic tool definitions
+    if not tools and tool_calls:
+        seen_names = set()
+        for call in tool_calls:
+            name = call.get("name", "unknown_function")
+            if name not in seen_names:
+                tools.append({
+                    "name": name,
+                    "description": f"Function {name}",
+                    "parameters": {"type": "object", "properties": {}}
+                })
+                seen_names.add(name)
+
+    target = make_target(tool_calls)
+    n = len(target.get("tool_calls", []))
+    if n == 0:
+        return out
+
+    out["tools_json"] = json_dumps(tools)
+    out["messages_json"] = json_dumps(messages)
+    out["target_json"] = json_dumps(target)
+    out["meta_source"] = "toolbench"
+    out["n_calls"] = n
+    out["valid"] = True
     return out

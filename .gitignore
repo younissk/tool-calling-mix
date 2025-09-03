@@ -6,6 +6,7 @@
 output/
 data/gorilla_openfunctions_v1_train.json
 data/gorilla_openfunctions_v1_test.json
+data/ToolBench
 
 __pycache__/
 .pytest_cache/

@@ -35,13 +35,8 @@ upload:
 	hf upload younissk/tool-calling-mix images --repo-type=dataset
 	hf upload younissk/tool-calling-mix output/tool_sft_corpus --repo-type=dataset
 
-# Generate data visualizations
-visualize:
-	uv run python -m src.visualize
-
 all:
 	make dev
-	make visualize
 	make upload
 
 git:

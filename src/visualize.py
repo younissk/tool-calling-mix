@@ -2,10 +2,11 @@
 
 import json
 import os
+import gzip
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from datasets import load_from_disk
+from pathlib import Path
 
 # Set style
 plt.style.use('default')
@@ -13,9 +14,22 @@ sns.set_palette("husl")
 
 
 def load_dataset():
-    """Load the dataset from disk."""
-    dataset = load_from_disk("output/tool_sft_corpus")
-    return dataset
+    """Load the dataset from JSONL.gz files."""
+    data_dir = Path("output/tool_sft_corpus/raw")
+    all_data = []
+    
+    # Load all splits
+    for split_file in ["train.jsonl.gz", "validation.jsonl.gz", "test.jsonl.gz"]:
+        file_path = data_dir / split_file
+        if file_path.exists():
+            print(f"Loading {split_file}...")
+            with gzip.open(file_path, 'rt', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        all_data.append(json.loads(line))
+    
+    print(f"Loaded {len(all_data)} examples total")
+    return all_data
 
 
 def process_dataset(dataset):
@@ -23,15 +37,15 @@ def process_dataset(dataset):
     records = []
     for item in dataset:
         record = {
-            'meta_source': item['meta_source'],
-            'n_calls': item['n_calls'],
-            'difficulty': item['difficulty'],
-            'valid': item['valid']
+            'meta_source': item.get('meta_source', 'unknown'),
+            'n_calls': item.get('n_calls', 0),
+            'difficulty': item.get('difficulty', 'unknown'),
+            'valid': item.get('valid', False)
         }
         
         # Extract message features
         try:
-            messages = json.loads(item['messages_json'])
+            messages = json.loads(item.get('messages_json', '[]'))
             record['msg_count'] = len(messages)
             record['user_msg_len'] = len(messages[0]['content']) if messages else 0
         except:
@@ -40,17 +54,17 @@ def process_dataset(dataset):
             
         # Extract tool features
         try:
-            tools = json.loads(item['tools_json'])
+            tools = json.loads(item.get('tools_json', '[]'))
             record['tool_count'] = len(tools)
         except:
             record['tool_count'] = 0
             
         # Extract target features
         try:
-            target = json.loads(item['target_json'])
+            target = json.loads(item.get('target_json', '{}'))
             tool_calls = target.get('tool_calls', [])
             record['actual_tool_calls'] = len(tool_calls)
-            record['tool_names'] = [call['name'] for call in tool_calls]
+            record['tool_names'] = [call.get('name', 'unknown') for call in tool_calls]
         except:
             record['actual_tool_calls'] = 0
             record['tool_names'] = []

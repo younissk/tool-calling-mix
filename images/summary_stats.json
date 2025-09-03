@@ -1,16 +1,18 @@
 {
-  "total_examples": 39538,
-  "valid_examples": 39538,
-  "avg_tool_calls": 1.1377914917294754,
+  "total_examples": 93538,
+  "valid_examples": 93538,
+  "avg_tool_calls": 1.5775406786546644,
   "max_tool_calls": 24,
   "difficulty_distribution": {
-    "simple": 39399,
-    "multiple": 139
+    "simple": 62468,
+    "multiple": 31022,
+    "parallel": 48
   },
   "source_distribution": {
+    "toolbench": 50000,
     "xlam60k": 20000,
     "openfunctions_v1": 11538,
-    "instr_nocall_dolly": 5000,
-    "wikitext_nocall": 3000
+    "instr_nocall_dolly": 7000,
+    "wikitext_nocall": 5000
   }
 }
