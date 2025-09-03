@@ -243,6 +243,7 @@ def adapt_openfunctions_row(row: Dict[str, Any]) -> Dict[str, Any]:
 def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
     """Adapt ToolBench dataset rows to standard format."""
     out = make_empty_row()
+    out["valid"] = False  # Start with invalid, set to True only on success
 
     # Extract the conversation from the new ToolBench format
     conversations = row.get("conversations", [])
@@ -253,7 +254,6 @@ def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
     messages = []
     tools = []
     tool_calls = []
-    current_call = None
 
     for msg in conversations:
         if not isinstance(msg, dict):
@@ -295,7 +295,7 @@ def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
                                 "description": desc,
                                 "parameters": {"type": "object", "properties": {}}
                             })
-            continue
+            role = "system"
 
         elif from_role == "user":
             role = "user"
@@ -355,7 +355,7 @@ def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
         elif from_role == "function":
             role = "tool"
         else:
-            continue
+            role = None
 
         # Add the message
         if role and content:
@@ -387,10 +387,21 @@ def adapt_toolbench_row(row: Dict[str, Any]) -> Dict[str, Any]:
     if n == 0:
         return out
 
-    out["tools_json"] = json_dumps(tools)
-    out["messages_json"] = json_dumps(messages)
-    out["target_json"] = json_dumps(target)
-    out["meta_source"] = "toolbench"
-    out["n_calls"] = n
-    out["valid"] = True
+    try:
+        # Validate by attempting to serialize to JSON
+        tools_json = json_dumps(tools)
+        messages_json = json_dumps(messages)
+        target_json = json_dumps(target)
+        
+        # Only set fields if JSON serialization succeeds
+        out["tools_json"] = tools_json
+        out["messages_json"] = messages_json
+        out["target_json"] = target_json
+        out["meta_source"] = "toolbench"
+        out["n_calls"] = n
+        out["valid"] = True
+    except Exception:
+        # If JSON serialization fails, return invalid row
+        pass
+        
     return out

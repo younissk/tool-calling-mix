@@ -10,6 +10,8 @@ data/ToolBench
 data/synthetic_parallel_tool_calls.json
 data/synthetic_parallel_tool_calls_partial.json
 
+temp_validation_dataset/
+
 __pycache__/
 .pytest_cache/
 .ruff_cache/

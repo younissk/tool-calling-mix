@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+This project is to create a Dataset for Fine-Tuning a Language Model to use Tools without Catastrophic Forgetting.
+
+Look first in the Makefile for the commands. You can also use uv instead of python to run the scripts.

@@ -1,25 +1,30 @@
 {
-  "total_examples": 58810,
-  "valid_examples": 58810,
-  "avg_tool_calls": 0.9931474239074988,
+  "total_examples": 75810,
+  "valid_examples": 75810,
+  "avg_tool_calls": 1.3367893417754915,
   "max_tool_calls": 24,
   "difficulty_distribution": {
-    "simple": 52399,
-    "parallel": 4974,
-    "no_call": 1300,
-    "multiple": 137
+    "simple": 56448,
+    "parallel": 15042,
+    "multiple": 3020,
+    "no_call": 1300
   },
   "source_distribution": {
+    "toolbench_normalized": 20000,
     "xlam60k": 20000,
     "openfunctions_v1": 11538,
-    "wikitext_nocall": 10000,
-    "instr_nocall_dolly": 10000,
+    "instr_nocall_dolly": 8000,
+    "wikitext_nocall": 8000,
     "synthetic_parallel": 4972,
     "no_tool_explanation": 800,
     "negative_clarification": 500,
-    "schema_strict_short_enums": 250,
+    "toolbench_normalized_adversarial_unicode": 263,
+    "toolbench_normalized_adversarial_falsy_optional": 255,
     "schema_strict_type_correct_ints": 250,
+    "schema_strict_short_enums": 250,
     "schema_strict_exact_locales": 250,
-    "schema_strict_state_abbreviations": 250
+    "schema_strict_state_abbreviations": 250,
+    "toolbench_normalized_adversarial_whitespace": 249,
+    "toolbench_normalized_adversarial_punctuation": 233
   }
 }

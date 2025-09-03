@@ -255,12 +255,53 @@ def normalize_toolbench_fields(tool_call: Dict[str, Any]) -> Dict[str, Any]:
 
 def validate_tool_call_schema(tool_call: Dict[str, Any], function_name: str) -> Tuple[bool, Optional[str]]:
     """Validate tool call arguments against known schemas."""
-    if function_name not in TOOL_SCHEMAS:
+    # Map function name to schema based on keywords
+    schema_name = None
+    
+    # Only validate functions that are clearly of a specific type
+    fn_lower = function_name.lower()
+    
+    # Ride booking functions
+    if (
+        ("ride" in fn_lower and "book" in fn_lower) or
+        ("uber" in fn_lower and "uber_eats" not in fn_lower) or
+        ("taxi" in fn_lower and "book" in fn_lower) or
+        ("car" in fn_lower and "service" in fn_lower)
+    ):
+        schema_name = "ride_booking"
+    
+    # Weather functions
+    elif (
+        ("weather" in fn_lower and "get" in fn_lower) or
+        ("forecast" in fn_lower and "market" not in fn_lower) or
+        ("temperature" in fn_lower and "get" in fn_lower)
+    ):
+        schema_name = "weather_query"
+    
+    # Timer functions
+    elif (
+        ("timer" in fn_lower and "set" in fn_lower) or
+        ("alarm" in fn_lower and "set" in fn_lower) or
+        ("wait" in fn_lower and "seconds" in fn_lower) or
+        ("sleep" in fn_lower and "seconds" in fn_lower)
+    ):
+        schema_name = "timer_setting"
+    
+    if not schema_name or schema_name not in TOOL_SCHEMAS:
         return True, None  # No schema to validate against
     
     try:
-        schema = TOOL_SCHEMAS[function_name]
-        jsonschema.validate(tool_call.get("arguments", {}), schema)
+        schema = TOOL_SCHEMAS[schema_name]
+        # Normalize arguments based on field mappings
+        args = tool_call.get("arguments", {})
+        normalized_args = {}
+        for k, v in args.items():
+            # Check if this field has a normalized name
+            norm_key = TOOLBENCH_FIELD_MAPPINGS.get(k, k)
+            normalized_args[norm_key] = v
+        
+        # Validate normalized arguments
+        jsonschema.validate(normalized_args, schema)
         return True, None
     except jsonschema.ValidationError as e:
         return False, str(e)
@@ -421,37 +462,27 @@ def validate_example_json_schema(example: Dict[str, Any]) -> Tuple[bool, List[st
     errors = []
     
     try:
-        # Validate tools_json
-        tools = json.loads(example["tools_json"])
-        if not isinstance(tools, list):
-            errors.append("tools_json must be a list")
-        else:
-            for i, tool in enumerate(tools):
-                if not isinstance(tool, dict):
-                    errors.append(f"Tool {i} must be a dict")
-                elif "name" not in tool:
-                    errors.append(f"Tool {i} missing required 'name' field")
-    except json.JSONDecodeError as e:
-        errors.append(f"Invalid JSON in tools_json: {e}")
-    
-    try:
-        # Validate messages_json
+        # Validate messages_json first (required for all examples)
         messages = json.loads(example["messages_json"])
         if not isinstance(messages, list):
             errors.append("messages_json must be a list")
         else:
+            has_user_message = False
             for i, msg in enumerate(messages):
                 if not isinstance(msg, dict):
                     errors.append(f"Message {i} must be a dict")
                 elif "role" not in msg or "content" not in msg:
                     errors.append(f"Message {i} missing 'role' or 'content'")
-                elif msg["role"] not in ["user", "assistant", "tool", "system"]:
-                    errors.append(f"Message {i} has invalid role: {msg['role']}")
+                elif msg["role"] == "user":
+                    has_user_message = True
+            
+            if not has_user_message:
+                errors.append("Example must have at least one user message")
     except json.JSONDecodeError as e:
         errors.append(f"Invalid JSON in messages_json: {e}")
     
     try:
-        # Validate target_json
+        # Validate target_json (required for all examples)
         target = json.loads(example["target_json"])
         if not isinstance(target, dict):
             errors.append("target_json must be a dict")
@@ -460,15 +491,39 @@ def validate_example_json_schema(example: Dict[str, Any]) -> Tuple[bool, List[st
         elif not isinstance(target["tool_calls"], list):
             errors.append("target_json.tool_calls must be a list")
         else:
-            for i, call in enumerate(target["tool_calls"]):
-                if not isinstance(call, dict):
-                    errors.append(f"Tool call {i} must be a dict")
-                elif "name" not in call or "arguments" not in call:
-                    errors.append(f"Tool call {i} missing 'name' or 'arguments'")
-                elif not isinstance(call["arguments"], dict):
-                    errors.append(f"Tool call {i} arguments must be a dict")
+            n_calls = len(target["tool_calls"])
+            if n_calls != example.get("n_calls", 0):
+                errors.append(f"n_calls ({example.get('n_calls', 0)}) does not match number of tool calls ({n_calls})")
+            
+            if n_calls > 0:  # Only validate tool calls if they exist
+                for i, call in enumerate(target["tool_calls"]):
+                    if not isinstance(call, dict):
+                        errors.append(f"Tool call {i} must be a dict")
+                    elif "name" not in call or "arguments" not in call:
+                        errors.append(f"Tool call {i} missing 'name' or 'arguments'")
+                    elif not isinstance(call["arguments"], dict):
+                        errors.append(f"Tool call {i} arguments must be a dict")
     except json.JSONDecodeError as e:
         errors.append(f"Invalid JSON in target_json: {e}")
+    
+    try:
+        # Validate tools_json (only required for tool-calling examples)
+        tools = json.loads(example["tools_json"])
+        if example.get("n_calls", 0) > 0:  # Only validate tools for tool-calling examples
+            if not isinstance(tools, list):
+                errors.append("tools_json must be a list")
+            else:
+                for i, tool in enumerate(tools):
+                    if not isinstance(tool, dict):
+                        errors.append(f"Tool {i} must be a dict")
+                    elif "name" not in tool:
+                        errors.append(f"Tool {i} missing required 'name' field")
+        else:
+            # For no-call examples, tools_json should be an empty list
+            if tools != []:
+                errors.append("tools_json must be an empty list for no-call examples")
+    except json.JSONDecodeError as e:
+        errors.append(f"Invalid JSON in tools_json: {e}")
     
     return len(errors) == 0, errors
 

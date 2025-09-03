@@ -1,5 +1,6 @@
 """Quality validation script for the enhanced tool-calling dataset."""
 
+import os
 import json
 import time
 from typing import Dict, Any
@@ -222,17 +223,29 @@ def validate_enhanced_dataset(dataset_path: str = "output/tool_sft_corpus") -> D
     try:
         # Load dataset
         print(f"📂 Loading dataset from {dataset_path}...")
-        if dataset_path.endswith('.jsonl') or dataset_path.endswith('.json'):
-            from datasets import load_dataset
-            dataset_raw = load_dataset('json', data_files=dataset_path, split='train')
-        else:
-            dataset_raw = load_from_disk(dataset_path)
+        from datasets import load_dataset
         
-        # If it's a DatasetDict, use the train split
-        if hasattr(dataset_raw, 'keys'):
+        # Try to load from raw JSONL files first
+        raw_path = os.path.join(dataset_path, "raw")
+        if os.path.exists(raw_path):
+            data_files = {
+                "train": os.path.join(raw_path, "train.jsonl.gz"),
+                "validation": os.path.join(raw_path, "validation.jsonl.gz"),
+                "test": os.path.join(raw_path, "test.jsonl.gz")
+            }
+            dataset_raw = load_dataset('json', data_files=data_files)
             dataset = dataset_raw['train']
         else:
-            dataset = dataset_raw
+            # Fallback to loading from disk
+            try:
+                dataset_raw = load_from_disk(dataset_path)
+                if hasattr(dataset_raw, 'keys'):
+                    dataset = dataset_raw['train']
+                else:
+                    dataset = dataset_raw
+            except Exception as e:
+                print(f"❌ Failed to load dataset: {e}")
+                return {"error": str(e)}
         
         print(f"✅ Loaded {len(dataset)} examples") # type: ignore
         
