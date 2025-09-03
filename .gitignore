@@ -7,6 +7,8 @@ output/
 data/gorilla_openfunctions_v1_train.json
 data/gorilla_openfunctions_v1_test.json
 data/ToolBench
+data/synthetic_parallel_tool_calls.json
+data/synthetic_parallel_tool_calls_partial.json
 
 __pycache__/
 .pytest_cache/

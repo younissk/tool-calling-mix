@@ -1,0 +1,451 @@
+[
+  {
+    "id": "synthetic_parallel_0",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "For my design validation, I need to calculate the areas of circles with radii 9.0, 6.9, 15.2, 16.9, 9.8 units. Can you compute these for me?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_circle_area",
+        "description": "Calculates the area of a circle given its radius.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "radius": {
+              "type": "float",
+              "description": "The radius of the circle."
+            }
+          },
+          "required": [
+            "radius"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_circle_area(radius=9.0)",
+      "calculate_circle_area(radius=6.9)",
+      "calculate_circle_area(radius=15.2)",
+      "calculate_circle_area(radius=16.9)",
+      "calculate_circle_area(radius=9.8)"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_1",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on scientific research and need to perform calculate rectangle area calculations for 3 different cases. Could you help with these computations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_rectangle_area",
+        "description": "Calculates the area of a rectangle given its width and height.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "width": {
+              "type": "float",
+              "description": "The width of the rectangle."
+            },
+            "height": {
+              "type": "float",
+              "description": "The height of the rectangle."
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_rectangle_area(width=12.6, height=18.8)",
+      "calculate_rectangle_area(width=6.4, height=4.7)",
+      "calculate_rectangle_area(width=13.2, height=13.3)"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_2",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on a architectural design and need to calculate triangle areas for sections with base 5.7 and height 20.7, base 19.1 and height 9.5, base 33.5 and height 10.2, base 19.8 and height 37.2 units respectively. Could you help with these calculations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_area_triangle",
+        "description": "Calculates the area of a triangle given its base and height.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "base": {
+              "type": "float",
+              "description": "The base of the triangle."
+            },
+            "height": {
+              "type": "float",
+              "description": "The height of the triangle."
+            }
+          },
+          "required": [
+            "base",
+            "height"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_area_triangle(base=5.7, height=20.7)",
+      "calculate_area_triangle(base=19.1, height=9.5)",
+      "calculate_area_triangle(base=33.5, height=10.2)",
+      "calculate_area_triangle(base=19.8, height=37.2)"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_3",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "For my scientific research, I need to calculate the areas of circles with radii 14.8, 10.3, 21.7, 11.3, 17.6 units. Can you compute these for me?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_circle_area",
+        "description": "Calculates the area of a circle given its radius.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "radius": {
+              "type": "float",
+              "description": "The radius of the circle."
+            }
+          },
+          "required": [
+            "radius"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_circle_area(radius=14.8)",
+      "calculate_circle_area(radius=10.3)",
+      "calculate_circle_area(radius=21.7)",
+      "calculate_circle_area(radius=11.3)",
+      "calculate_circle_area(radius=17.6)"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_4",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on market research and need to perform calculate standard deviation calculations for 3 different cases. Could you help with these computations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_standard_deviation",
+        "description": "Calculates the standard deviation of a list of numbers.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "numbers": {
+              "type": "array",
+              "items": {
+                "type": "float"
+              },
+              "description": "The list of numbers."
+            }
+          },
+          "required": [
+            "numbers"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_standard_deviation(numbers=[83.2, 28.3, 76.3, 1.8, 52.5, 11.7, 67.4])",
+      "calculate_standard_deviation(numbers=[54.7, 13.7, 26.0, 74.4, 34.2, 21.4, 37.6, 38.3, 54.6])",
+      "calculate_standard_deviation(numbers=[29.7, 68.9, 49.5, 36.6, 69.4, 98.1, 62.6, 52.3])"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_5",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm analyzing data for market research and need to calculate the mean for dataset 1 with 6 values, dataset 2 with 5 values, dataset 3 with 7 values, dataset 4 with 5 values, dataset 5 with 8 values. Could you process these calculations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_mean",
+        "description": "Calculates the mean of a list of numbers.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "numbers": {
+              "type": "array",
+              "items": {
+                "type": "float"
+              },
+              "description": "The list of numbers."
+            }
+          },
+          "required": [
+            "numbers"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_mean(numbers=[37.9, 1.5, 83.8, 69.9, 25.2, 66.2])",
+      "calculate_mean(numbers=[99.4, 70.0, 54.0, 49.5, 37.8])",
+      "calculate_mean(numbers=[67.2, 33.5, 37.0, 64.6, 80.3, 87.1, 74.9])",
+      "calculate_mean(numbers=[15.0, 88.2, 6.4, 3.9, 61.4])",
+      "calculate_mean(numbers=[2.4, 59.5, 30.9, 72.3, 89.1, 50.2, 99.8, 97.6])"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_6",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on survey analysis and need to perform calculate standard deviation calculations for 4 different cases. Could you help with these computations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_standard_deviation",
+        "description": "Calculates the standard deviation of a list of numbers.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "numbers": {
+              "type": "array",
+              "items": {
+                "type": "float"
+              },
+              "description": "The list of numbers."
+            }
+          },
+          "required": [
+            "numbers"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_standard_deviation(numbers=[12.2, 32.7, 70.9, 68.9, 70.9, 55.4])",
+      "calculate_standard_deviation(numbers=[15.5, 25.1, 66.5, 72.5, 96.9, 24.6, 78.1])",
+      "calculate_standard_deviation(numbers=[85.1, 25.7, 32.7, 38.3, 67.9, 91.5, 90.4, 23.7, 60.4, 20.2])",
+      "calculate_standard_deviation(numbers=[8.5, 24.0, 47.8, 67.6, 98.0, 86.1, 97.9])"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_7",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm analyzing data for clinical trial and need to calculate the mean for dataset 1 with 10 values, dataset 2 with 7 values, dataset 3 with 5 values, dataset 4 with 7 values, dataset 5 with 9 values. Could you process these calculations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_mean",
+        "description": "Calculates the mean of a list of numbers.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "numbers": {
+              "type": "array",
+              "items": {
+                "type": "float"
+              },
+              "description": "The list of numbers."
+            }
+          },
+          "required": [
+            "numbers"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_mean(numbers=[91.8, 91.8, 17.4, 85.6, 20.0, 96.9, 26.1, 53.9, 23.0, 15.6])",
+      "calculate_mean(numbers=[30.4, 11.9, 91.1, 17.2, 71.4, 68.2, 38.0])",
+      "calculate_mean(numbers=[65.2, 76.6, 30.5, 96.6, 23.4])",
+      "calculate_mean(numbers=[34.5, 10.1, 4.5, 15.4, 24.0, 75.0, 78.4])",
+      "calculate_mean(numbers=[7.1, 31.3, 19.5, 86.3, 32.9, 95.1, 85.2, 61.0, 68.5])"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_8",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on laboratory experiment and need to perform calculate gravitational force calculations for 4 different cases. Could you help with these computations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_gravitational_force",
+        "description": "Calculates gravitational force between two objects.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "mass1": {
+              "type": "float",
+              "description": "Mass of first object in kg."
+            },
+            "mass2": {
+              "type": "float",
+              "description": "Mass of second object in kg."
+            },
+            "distance": {
+              "type": "float",
+              "description": "Distance between objects in meters."
+            }
+          },
+          "required": [
+            "mass1",
+            "mass2",
+            "distance"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_gravitational_force(mass1=280.2, mass2=804.1, distance=86.65)",
+      "calculate_gravitational_force(mass1=407.3, mass2=443.4, distance=7.59)",
+      "calculate_gravitational_force(mass1=425.9, mass2=659.7, distance=36.59)",
+      "calculate_gravitational_force(mass1=549.8, mass2=468.8, distance=91.59)"
+    ]
+  },
+  {
+    "id": "synthetic_parallel_9",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm working on engineering simulation and need to perform calculate acceleration calculations for 3 different cases. Could you help with these computations?"
+        }
+      ]
+    ],
+    "function": [
+      {
+        "name": "calculate_acceleration",
+        "description": "Calculates acceleration given force and mass.",
+        "parameters": {
+          "type": "dict",
+          "properties": {
+            "force": {
+              "type": "float",
+              "description": "The applied force in Newtons."
+            },
+            "mass": {
+              "type": "float",
+              "description": "The mass of the object in kg."
+            }
+          },
+          "required": [
+            "force",
+            "mass"
+          ]
+        }
+      }
+    ],
+    "execution_result_type": [
+      "exact_match",
+      "exact_match",
+      "exact_match"
+    ],
+    "ground_truth": [
+      "calculate_acceleration(force=333.7, mass=74.9)",
+      "calculate_acceleration(force=358.2, mass=59.0)",
+      "calculate_acceleration(force=136.8, mass=56.7)"
+    ]
+  }
+]

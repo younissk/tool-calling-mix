@@ -1,18 +1,25 @@
 {
-  "total_examples": 93538,
-  "valid_examples": 93538,
-  "avg_tool_calls": 1.5775406786546644,
+  "total_examples": 58810,
+  "valid_examples": 58810,
+  "avg_tool_calls": 0.9931474239074988,
   "max_tool_calls": 24,
   "difficulty_distribution": {
-    "simple": 62468,
-    "multiple": 31022,
-    "parallel": 48
+    "simple": 52399,
+    "parallel": 4974,
+    "no_call": 1300,
+    "multiple": 137
   },
   "source_distribution": {
-    "toolbench": 50000,
     "xlam60k": 20000,
     "openfunctions_v1": 11538,
-    "instr_nocall_dolly": 7000,
-    "wikitext_nocall": 5000
+    "wikitext_nocall": 10000,
+    "instr_nocall_dolly": 10000,
+    "synthetic_parallel": 4972,
+    "no_tool_explanation": 800,
+    "negative_clarification": 500,
+    "schema_strict_short_enums": 250,
+    "schema_strict_type_correct_ints": 250,
+    "schema_strict_exact_locales": 250,
+    "schema_strict_state_abbreviations": 250
   }
 }

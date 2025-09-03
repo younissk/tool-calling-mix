@@ -15,13 +15,15 @@ TOOLBENCH_FILES = [
 # Feature flags
 USE_XLAM = True
 USE_TOOLBENCH = True
+USE_SYNTHETIC_PARALLEL = True
 
 # Dataset caps - optimized for multi-call and no-call balance
 CAP_XLAM = 20000              # Single and multi-call tool examples
 CAP_OPENFUNCTIONS = 15000     # Tool calling examples  
-CAP_TOOLBENCH = 50000         # Multi-call rich examples (~48% multi-call)
+CAP_TOOLBENCH = 15000         # Multi-call rich examples (~48% multi-call) - reduced for memory
 CAP_DOLLY_NO_CALL = 10000      # No-call instruction following examples
-CAP_WIKITEXT_NO_CALL = 7000   # No-call language understanding examples
+CAP_WIKITEXT_NO_CALL = 10000   # No-call language understanding examples
+CAP_SYNTHETIC_PARALLEL = 5000  # Synthetic parallel tool call examples
 
 GLOBAL_MAX_EXAMPLES = 100000
 

@@ -1339,6 +1339,7 @@ dependencies = [
     { name = "plotly" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "seaborn" },
     { name = "tqdm" },
 ]
@@ -1359,6 +1360,7 @@ requires-dist = [
     { name = "plotly" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "seaborn" },
     { name = "tqdm" },
 ]

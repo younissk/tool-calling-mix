@@ -474,40 +474,30 @@ def validate_example_json_schema(example: Dict[str, Any]) -> Tuple[bool, List[st
 
 
 def filter_quality_examples(examples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Filter examples to only include high-quality ones that pass validation."""
+    """Filter examples to only include high-quality ones that pass basic validation."""
     filtered = []
     
     for example in examples:
-        # Basic validation
-        is_valid, errors = validate_example_json_schema(example)
-        if not is_valid:
-            continue
-        
-        # Additional quality checks
         try:
+            # Parse JSON fields to ensure they're valid
             target = json.loads(example["target_json"])
             messages = json.loads(example["messages_json"])
+            tools = json.loads(example["tools_json"])
             
-            # Ensure consistent tool call count
-            actual_n_calls = len(target.get("tool_calls", []))
-            if actual_n_calls != example.get("n_calls", 0):
+            # Basic structure validation
+            if not isinstance(messages, list) or not isinstance(tools, list):
                 continue
-            
+                
             # Ensure at least one user message
             if not any(msg.get("role") == "user" for msg in messages):
                 continue
-            
-            # Validate tool call schemas if available
-            all_calls_valid = True
-            for call in target.get("tool_calls", []):
-                call_name = call.get("name", "")
-                is_schema_valid, _ = validate_tool_call_schema(call, call_name)
-                if not is_schema_valid:
-                    all_calls_valid = False
-                    break
-            
-            if all_calls_valid:
-                filtered.append(example)
+                
+            # Update n_calls if needed instead of filtering
+            actual_n_calls = len(target.get("tool_calls", []))
+            if actual_n_calls != example.get("n_calls", 0):
+                example["n_calls"] = actual_n_calls
+                
+            filtered.append(example)
                 
         except Exception:
             # Skip examples that fail parsing

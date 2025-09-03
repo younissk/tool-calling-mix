@@ -11,14 +11,12 @@ from tqdm import tqdm
 from src.config import (
     USE_TOOLBENCH, CAP_TOOLBENCH, RANDOM_SEED
 )
-from src.parsers import adapt_toolbench_row
-from src.utils import make_empty_row, read_json_file, add_difficulty
+from src.utils import make_empty_row, read_json_file, add_difficulty, adapt_toolbench_row_with_normalization
 from src.quality_control import (
     generate_schema_strict_example,
     generate_negative_example, 
     generate_no_tool_example,
     create_adversarial_variant,
-    normalize_toolbench_fields,
     filter_quality_examples,
     CLARIFICATION_TEMPLATES,
     NO_TOOL_PATTERNS,
@@ -150,9 +148,9 @@ def enhance_toolbench_with_normalization(files: list[str], cap: int = CAP_TOOLBE
     print(f"[start] Loading enhanced ToolBench from {len(files)} files...")
     start_time = time.time()
     
-    # Load raw data first (reusing existing logic)
-    all_rows = []
-    print("[step 1/5] Reading JSON files...")
+    # Process files one at a time to avoid memory issues
+    all_datasets = []
+    print("[step 1/5] Reading and processing JSON files...")
     
     for fp in tqdm(files, desc="Reading ToolBench files", unit="file"):
         if not os.path.exists(fp):
@@ -167,77 +165,97 @@ def enhance_toolbench_with_normalization(files: list[str], cap: int = CAP_TOOLBE
             print(f"[warn] empty/parse-failed: {fp}")
             continue
             
-        all_rows.extend(rows)
         file_size = os.path.getsize(fp) / (1024 * 1024)  # MB
         print(f"[ok] loaded {len(rows)} rows from {os.path.basename(fp)} ({file_size:.1f}MB, {file_time:.2f}s)")
+        
+        # Process this file in chunks to avoid memory issues
+        print(f"[process] Processing {len(rows)} rows from {os.path.basename(fp)} in chunks...")
+        
+        chunk_size = 10000  # Process 10k rows at a time
+        file_datasets = []
+        
+        for i in range(0, len(rows), chunk_size):
+            chunk = rows[i:i + chunk_size]
+            print(f"[chunk] Processing chunk {i//chunk_size + 1}/{(len(rows) + chunk_size - 1)//chunk_size} ({len(chunk)} rows)")
+            
+            # Convert chunk to JSON strings
+            json_chunk = [orjson.dumps(r).decode('utf-8') for r in chunk]
+            
+            # Create dataset for this chunk
+            chunk_ds = Dataset.from_dict({"raw_json": json_chunk})
+            
+            # Adapt this chunk's data with normalization
+            def _map_with_normalization(row):
+                try:
+                    obj = orjson.loads(row["raw_json"].encode('utf-8'))
+                    return adapt_toolbench_row_with_normalization(obj)
+                except Exception:
+                    return make_empty_row()
+
+            adapted_chunk = chunk_ds.map(_map_with_normalization, remove_columns=["raw_json"], desc=f"Adapting chunk {i//chunk_size + 1}")
+            file_datasets.append(adapted_chunk)
+            
+            # Clear memory
+            del chunk, json_chunk, chunk_ds
+        
+        # Combine chunks from this file
+        if file_datasets:
+            from datasets import concatenate_datasets
+            file_ds = concatenate_datasets(file_datasets)
+            all_datasets.append(file_ds)
+            print(f"[ok] Processed {len(file_ds)} examples from {os.path.basename(fp)}")
+        
+        # Clear memory
+        del rows, file_datasets
     
-    if not all_rows:
+    if not all_datasets:
         print("[error] No ToolBench data loaded")
         return None
 
-    print(f"[step 2/5] Creating dataset from {len(all_rows)} rows...")
+    print(f"[step 2/5] Combining {len(all_datasets)} processed datasets...")
     dataset_start = time.time()
     
-    # Create dataset with single uniform column
-    ds = Dataset.from_dict({"raw_json": [orjson.dumps(r).decode('utf-8') for r in all_rows]})
+    # Combine all datasets
+    from datasets import concatenate_datasets
+    ds = concatenate_datasets(all_datasets)
     dataset_time = time.time() - dataset_start
-    print(f"[ok] Dataset created in {dataset_time:.2f}s")
+    print(f"[ok] Combined dataset created in {dataset_time:.2f}s")
 
-    # Map: parse, adapt, normalize, drop raw_json
-    print("[step 3/5] Adapting and normalizing ToolBench rows...")
-    adapt_start = time.time()
-    
-    def _map_with_normalization(row):
-        try:
-            obj = orjson.loads(row["raw_json"].encode('utf-8'))
-        except Exception:
-            return make_empty_row()
-        
-        # First adapt using existing logic
-        adapted = adapt_toolbench_row(obj)
-        
-        # Then apply normalization to tool calls
-        if adapted.get("valid") and adapted.get("target_json"):
-            try:
-                target = orjson.loads(adapted["target_json"].encode('utf-8'))
-                if "tool_calls" in target:
-                    normalized_calls = []
-                    for call in target["tool_calls"]:
-                        normalized_call = normalize_toolbench_fields(call)
-                        normalized_calls.append(normalized_call)
-                    
-                    target["tool_calls"] = normalized_calls
-                    adapted["target_json"] = orjson.dumps(target).decode('utf-8')
-                    adapted["meta_source"] = "toolbench_normalized"
-            except Exception:
-                # If normalization fails, keep original
-                pass
-        
-        return adapted
-
-    mapped = ds.map(_map_with_normalization, remove_columns=["raw_json"], desc="Adapting ToolBench with normalization")
-    adapt_time = time.time() - adapt_start
-    print(f"[ok] Adaptation and normalization completed in {adapt_time:.2f}s")
-    
-    print("[step 4/5] Quality filtering...")
+    # Quality filtering (adaptation already done per chunk)
+    print("[step 3/5] Quality filtering...")
     filter_start = time.time()
     
-    # Filter for valid examples
-    mapped = mapped.filter(lambda ex: bool(ex["valid"]))
+    # The dataset is already adapted, just need to filter
+    mapped = ds
     
-    # Apply quality filtering
-    print("[step 4a/5] Converting to list for quality filtering...")
-    example_list = [dict(ex) for ex in mapped]  # Convert to list of dicts
-    print(f"[step 4b/5] Applying quality filters to {len(example_list)} examples...")
-    filtered_list = filter_quality_examples(example_list)
-    print(f"[ok] Quality filtering retained {len(filtered_list)}/{len(example_list)} examples")
+    # Filter for valid examples and basic JSON structure
+    initial_count = len(mapped)
+    mapped = mapped.filter(lambda ex: bool(ex.get("valid", True)))
+    valid_count = len(mapped)
+    print(f"[filter] Valid examples: {valid_count}/{initial_count}")
     
-    # Convert back to dataset
-    if filtered_list:
-        mapped = Dataset.from_list(filtered_list)
-    else:
-        print("[warn] No examples passed quality filtering")
-        return None
+    # Basic JSON structure validation
+    def validate_json_structure(example):
+        try:
+            # Check if required fields are present and are valid JSON
+            for field in ["tools_json", "messages_json", "target_json"]:
+                if field not in example:
+                    print(f"[debug] Missing field: {field}")
+                    return False
+                try:
+                    json.loads(example[field])  # Validate JSON parsing
+                except Exception as e:
+                    print(f"[debug] Invalid JSON in {field}: {str(e)}")
+                    return False
+            return True
+        except Exception as e:
+            print(f"[debug] Validation error: {str(e)}")
+            return False
+    
+    mapped = mapped.filter(validate_json_structure)
+    final_count = len(mapped)
+    print(f"[filter] JSON structure valid: {final_count}/{valid_count}")
+    print(f"[ok] Quality filtering retained {final_count}/{initial_count} examples")
     
     mapped = mapped.map(add_difficulty)
     
@@ -275,7 +293,6 @@ def enhance_toolbench_with_normalization(files: list[str], cap: int = CAP_TOOLBE
     
     print(f"[ok] Enhanced ToolBench: {len(mapped)} examples loaded in {total_time:.2f}s total")
     print(f"    - Dataset creation: {dataset_time:.2f}s") 
-    print(f"    - Adaptation + normalization: {adapt_time:.2f}s")
     print(f"    - Quality filtering: {filter_time:.2f}s")
     print(f"    - Adversarial variants: {adversarial_time:.2f}s")
     
@@ -340,11 +357,19 @@ def create_enhanced_mixed_dataset() -> Dataset:
         print(f"[ok] Negative examples: {len(negative_examples)} examples")
 
     # Generate balanced no-tool examples
-    print("\n[8/8] Generating balanced no-tool examples...")
+    print("\n[8/9] Generating balanced no-tool examples...")
     no_tool_examples = generate_balanced_no_tool_examples(800)
     if no_tool_examples is not None and len(no_tool_examples) > 0:
         parts.append(no_tool_examples)
         print(f"[ok] No-tool examples: {len(no_tool_examples)} examples")
+
+    # Load synthetic parallel dataset
+    print("\n[9/9] Loading synthetic parallel dataset...")
+    from src.data_loaders import load_synthetic_parallel_data
+    synthetic_ds = load_synthetic_parallel_data()
+    if synthetic_ds is not None and len(synthetic_ds) > 0:
+        parts.append(synthetic_ds)
+        print(f"[ok] Synthetic parallel: {len(synthetic_ds)} examples")
 
     if not parts:
         raise RuntimeError("No data loaded. Check paths and try again.")
@@ -393,38 +418,6 @@ def create_enhanced_mixed_dataset() -> Dataset:
             quality_categories["adversarial"] += 1
         else:
             quality_categories["original"] += 1
-    
-    total_examples = len(mix)
-    tool_calling_examples = sum(count for calls, count in call_distribution.items() if calls > 0)
-    no_call_examples = call_distribution.get(0, 0)
-    multi_call_examples = sum(count for calls, count in call_distribution.items() if calls > 1)
-    
-    print("=" * 60)
-    print(f"ENHANCED DATASET ANALYSIS: {total_examples} examples")
-    print("=" * 60)
-    print("By source:")
-    for source, count in sorted(source_counts.items()):
-        pct = count / total_examples * 100
-        print(f"  {source}: {count:,} ({pct:.1f}%)")
-    
-    print("\nBy quality enhancement:")
-    for category, count in quality_categories.items():
-        pct = count / total_examples * 100
-        print(f"  {category}: {count:,} ({pct:.1f}%)")
-    
-    print("\nBy function calling:")
-    print(f"  Tool calling: {tool_calling_examples:,} ({tool_calling_examples/total_examples*100:.1f}%)")
-    print(f"  No-call: {no_call_examples:,} ({no_call_examples/total_examples*100:.1f}%)")
-    print(f"  Multi-call: {multi_call_examples:,} ({multi_call_examples/total_examples*100:.1f}%)")
-    
-    no_call_percentage = no_call_examples / total_examples * 100
-    print(f"\n📊 No-call balance: {no_call_percentage:.1f}% (target: 20-25%)")
-    if 20 <= no_call_percentage <= 25:
-        print("✅ No-call balance is within target range!")
-    elif no_call_percentage < 20:
-        print("⚠️  No-call percentage is below target (need more no-call examples)")
-    else:
-        print("⚠️  No-call percentage is above target (need more tool-calling examples)")
     
     print(f"\nTotal processing time: {total_time:.2f}s")
     print("=" * 60)

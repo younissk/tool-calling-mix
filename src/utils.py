@@ -4,6 +4,8 @@ import json
 import orjson
 from typing import Dict, Any, List
 
+from src.quality_control import TOOLBENCH_FIELD_MAPPINGS
+
 
 def json_dumps(obj: Any) -> str:
     """Safely serialize object to JSON string using orjson with fallback to json."""
@@ -24,6 +26,45 @@ def make_empty_row() -> Dict[str, Any]:
         "difficulty": "simple",
         "valid": False,
     }
+
+
+def adapt_toolbench_row_with_normalization(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Adapt ToolBench dataset rows to standard format with field normalization."""
+    from src.parsers import adapt_toolbench_row
+    
+    # First adapt using base adapter
+    adapted = adapt_toolbench_row(row)
+    if not adapted.get("valid"):
+        return adapted
+        
+    # Then apply field normalization if needed
+    try:
+        target = json.loads(adapted["target_json"])
+        tool_calls = target.get("tool_calls", [])
+        
+        # Normalize tool call fields
+        for call in tool_calls:
+            if "parameters" in call:
+                params = call["parameters"]
+                if isinstance(params, dict):
+                    # Apply field normalization mappings
+                    normalized = {}
+                    for k, v in params.items():
+                        # Check if this field has a normalized name
+                        norm_key = TOOLBENCH_FIELD_MAPPINGS.get(k, k)
+                        normalized[norm_key] = v
+                    call["parameters"] = normalized
+                    
+        # Update target with normalized calls
+        target["tool_calls"] = tool_calls
+        adapted["target_json"] = json.dumps(target)
+        adapted["meta_source"] = "toolbench_normalized"
+        
+    except Exception:
+        # If normalization fails, return original adaptation
+        pass
+        
+    return adapted
 
 
 def make_target(tool_calls: Any) -> Dict[str, Any]:
@@ -84,13 +125,38 @@ def read_json_file(path: str) -> List[Dict[str, Any]]:
     return rows
 
 
-def add_difficulty(ex: Dict[str, Any]) -> Dict[str, str]:
-    """Add difficulty classification based on n_calls and user phrasing."""
-    msg = ex["messages_json"].lower()
-    if ex["n_calls"] <= 1:
-        diff = "simple"
-    elif any(k in msg for k in ("in parallel", "simultaneously", "at the same time", "parallel")):
-        diff = "parallel"
-    else:
-        diff = "multiple"
-    return {"difficulty": diff}
+def add_difficulty(ex: Dict[str, Any]) -> Dict[str, Any]:
+    """Add difficulty classification based on n_calls and tool types."""
+    try:
+        # Parse target_json to get tool calls
+        target = json.loads(ex.get("target_json", "{}"))
+        tool_calls = target.get("tool_calls", [])
+        
+        # Count total calls and unique tools
+        n_calls = len(tool_calls)
+        unique_tools = len(set(call.get("name", "") for call in tool_calls))
+        
+        # Determine difficulty
+        if n_calls == 0:
+            diff = "no_call"
+        elif n_calls == 1:
+            diff = "simple"
+        elif unique_tools > 1:
+            diff = "parallel"  # Multiple different tools = parallel
+        else:
+            diff = "multiple"  # Multiple calls to same tool = multiple
+            
+        # Update example with correct counts and difficulty
+        return {
+            **ex,
+            "n_calls": n_calls,
+            "difficulty": diff,
+            "valid": True if n_calls > 0 else ex.get("valid", False)
+        }
+        
+    except Exception:
+        # Keep existing values on error
+        return {
+            **ex,
+            "difficulty": ex.get("difficulty", "simple")
+        }

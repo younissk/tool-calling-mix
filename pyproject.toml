@@ -24,4 +24,5 @@ dependencies = [
     "matplotlib",
     "seaborn",
     "pandas",
+    "requests",
 ]
