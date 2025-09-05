@@ -56,6 +56,8 @@ dataset_info:
   dataset_size: null
 ---
 
+![Toolmix-Banner](./images/Toolmix%20-%20Banner.png)
+
 This is a dataset for fine-tuning a language model to use tools. I combined sources from various other tool calling datasets and added some non-tool calling examples to prevent catastrophic forgetting.
 
 ## Dataset Overview
